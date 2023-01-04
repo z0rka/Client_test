@@ -9,11 +9,8 @@ import org.example.handlers.ClientHandler;
 public class Main {
 
   public static void main(String[] args) {
-
-        ClientHandler handler = new ClientHandler();
-        handler.start();
-
+    ClientHandler handler = new ClientHandler();
+    handler.start();
   }
-
 }
 

@@ -13,6 +13,8 @@ import java.util.Scanner;
  */
 public class ClientHandler {
 
+  private static final int PORT = 8080;
+  private static final String HOST = "localhost";
   private boolean exit = false;
 
   /**
@@ -34,89 +36,65 @@ public class ClientHandler {
    * @param socket - socket of server
    */
   private void commandsHandler(Socket socket) {
-    Runnable r = () -> {
-      try (ObjectOutputStream objectStream = new ObjectOutputStream(
-          socket.getOutputStream());
-      ) {
+    try (ObjectOutputStream objectStream = new ObjectOutputStream(
+        socket.getOutputStream());
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+    ) {
+
+      String inputLine;
+
+      Scanner scanner = new Scanner(System.in);
+      int option;
+
+      while (!exit) {
+
+        if (reader.ready()) {
+          inputLine = reader.readLine();
+          System.out.println(inputLine);
+        }
 
         printMenu();
 
-        Scanner scanner = new Scanner(System.in);
-        int option;
+        System.out.println("Choose option");
+        option = scanner.nextInt();
 
-        while (!exit) {
-          System.out.println("Choose option");
-          option = scanner.nextInt();
+        switch (option) {
+          case 0:
 
-          switch (option) {
-            case 0:
+            objectStream.writeObject("exit");
 
-              objectStream.writeObject("exit");
+            exit = true;
+            break;
 
-              exit = true;
-              break;
+          case 1:
+            Scanner scanner1 = new Scanner(System.in);
 
-            case 1:
-              Scanner scanner1 = new Scanner(System.in);
+            System.out.println("Enter path to file");
+            String pathToFile = scanner1.nextLine();
 
-              System.out.println("Enter path to file");
-              String pathToFile = scanner1.nextLine();
+            File file = new File(pathToFile);
 
-              File file = new File(pathToFile);
+            objectStream.writeObject(file);
 
-              objectStream.writeObject(file);
+            break;
 
-              break;
-
-            case 2:
-              objectStream.writeObject("Show");
-              break;
-
-            default:
-              System.out.println("Wrong option -_-");
-              break;
-          }
+          default:
+            System.out.println("Wrong option -_-");
+            break;
         }
-      } catch (IOException e) {
-        e.printStackTrace();
       }
-    };
-
-    new Thread(r).start();
-  }
-
-  /**
-   * Method that reads messages from server
-   *
-   * @param socket - socket of server
-   */
-  private void readServer(Socket socket) {
-
-    Runnable r = () -> {
-      String input;
-      try (BufferedReader reader = new BufferedReader(
-          new InputStreamReader(socket.getInputStream()))) {
-
-        while (!exit) {
-          input = reader.readLine();
-          System.out.println(input);
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    };
-    new Thread(r).start();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
    * Start of client
    */
   public void start() {
-    try (Socket socket = new Socket("localhost", 8080)
+    try (Socket socket = new Socket(HOST, PORT)
     ) {
       commandsHandler(socket);
-//      readServer(socket);
-
     } catch (IOException e) {
       e.printStackTrace();
     }
